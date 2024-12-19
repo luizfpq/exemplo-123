@@ -1,1 +1,17 @@
-{}
+[
+    {
+        "nome": "user1",
+        "email": "user1@gmail.com",
+        "timestamp": "2024-12-19T18:25:43.857481"
+    },
+    {
+        "nome": "user1",
+        "email": "user1@gmail.com",
+        "timestamp": "2024-12-19T18:38:51.699471"
+    },
+    {
+        "nome": "user1",
+        "email": "user1@gmail.com",
+        "timestamp": "2024-12-19T18:39:10.965964"
+    }
+]
