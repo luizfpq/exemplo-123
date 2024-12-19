@@ -5,5 +5,5 @@ class Categorias(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(80), nullable=False)
-    artista_id = db.Column(db.String(80), db.ForeignKey('artista.id'), nullable=False)
-    
+
+    artistas = db.relationship('Artista', back_populates='categoria', lazy=True)
