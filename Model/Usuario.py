@@ -9,3 +9,4 @@ class Usuario(db.Model):
     senha = db.Column(db.String(64), nullable=False, unique=True)
 
     playlists = db.relationship('Playlist', back_populates='usuario', lazy=True)
+    # Cria uma relação bidirecional com a tabela "playlists"

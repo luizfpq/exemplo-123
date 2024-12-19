@@ -1,5 +1,7 @@
 from flask import Blueprint, session, render_template, request, redirect, url_for, flash
 from Model import db, Usuario  # Certifique-se de que 'db' está sendo importado corretamente
+from json import load, dump
+from datetime import datetime
 
 # Blueprint 
 music = Blueprint('music', __name__)
@@ -26,7 +28,11 @@ def login():
         #se o usuario existir, então ele retorna a função playmusic
         if usuario and usuario.senha == senha:
             session['nome'] = usuario.nome
-            return redirect(url_for('music.playmusic'))  
+           # log = load(open("log.json", "r"))
+           # log[usuario.email] = datetime()
+           # dump(log, open("log.json", "w"), sort_keys=True, indent=4)
+            return redirect(url_for('music.playmusic'))
+        
         
         #se o usuario não existir, ele adiciona ao banco de dados
         elif not usuario:
@@ -34,6 +40,9 @@ def login():
             db.session.add(novo_usuario)
             db.session.commit()
             session['nome'] = novo_usuario.nome
+          #  log = load(open("log.json", "r"))
+          #  log[novo_usuario.email] = datetime()
+          #  dump(log, open("log.json", "w"), sort_keys=True, indent=4)
             return redirect(url_for('music.playmusic'))  
 
         else:
@@ -49,5 +58,5 @@ def playmusic():
 # rota logout
 @music.route('/logout')
 def logout():
-    session.pop('nome', None)
+    session.pop('nome')
     return redirect(url_for('music.index'))

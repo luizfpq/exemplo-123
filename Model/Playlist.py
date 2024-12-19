@@ -1,5 +1,6 @@
 from database import db
 
+# Classe que representa o modelo da tabela "playlist" no banco de dados
 class Playlist(db.Model):
     __tablename__ = 'playlists'
 
@@ -10,3 +11,4 @@ class Playlist(db.Model):
 
     usuario = db.relationship('Usuario', back_populates='playlists')
     musicas = db.relationship('Musica', secondary='playlist_musicas', back_populates='playlists')
+    # Cria uma relação bidirecional com a tabela "musicas" e outra com a tabela "usuario"
