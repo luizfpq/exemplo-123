@@ -1,10 +1,17 @@
 from flask import Blueprint, session, render_template, request, redirect, url_for, flash
-from Model import db, Usuario  # Certifique-se de que 'db' está sendo importado corretamente
-from json import load, dump
+import json
 from datetime import datetime
+from pathlib import Path
+from database import db
+from Model import Usuario
+from Repository.usuarioRepository import UsuarioRepository
 
 # Blueprint 
 music = Blueprint('music', __name__)
+usuario_repository = UsuarioRepository()  # Renomeado para seguir a convenção
+
+#Caminho para o Json
+log_path = Path("Model/log.json")
 
 # página inicial:
 @music.route('/')
@@ -21,42 +28,68 @@ def login():
         nome = request.form['username']
         email = request.form['email']
         senha = request.form['password']
-
+        
         #busca o nome e o email do usuario:
-        usuario = Usuario.query.filter_by(nome=nome, email=email).first()
+        usuario = usuario_repository.getUsuario(nome, email)
 
-        #se o usuario existir, então ele retorna a função playmusic
+        # o usuario existir, então ele retorna a função playmusic
         if usuario and usuario.senha == senha:
             session['nome'] = usuario.nome
-           # log = load(open("log.json", "r"))
-           # log[usuario.email] = datetime()
-           # dump(log, open("log.json", "w"), sort_keys=True, indent=4)
+            if not log_path.exists() or log_path.stat().st_size == 0:
+                data = [{
+                    "nome": nome,
+                    "email": email,
+                    "timestamp": datetime.now().isoformat()
+                }]
+                with open(log_path, "w") as f:
+                    json.dump(data, f, indent=4)
+            else:
+                with open(log_path, "r") as f:
+                    try:
+                        file_data = json.load(f)
+                        if isinstance(file_data, dict):  # Handle the case where the JSON is a dict
+                            file_data = [file_data]
+                    except json.JSONDecodeError:
+                        file_data = []
+
+                new_entry = {
+                    "nome": nome,
+                    "email": email,
+                    "timestamp": datetime.now().isoformat()
+                }
+                file_data.append(new_entry)
+
+                with open(log_path, "w") as f:
+                    json.dump(file_data, f, indent=4)
+                    
             return redirect(url_for('music.playmusic'))
-        
         
         #se o usuario não existir, ele adiciona ao banco de dados
         elif not usuario:
-            novo_usuario = Usuario(nome=nome, email=email, senha=senha)
-            db.session.add(novo_usuario)
-            db.session.commit()
+            novo_usuario = usuario_repository.addUsuario(nome, email, senha)
             session['nome'] = novo_usuario.nome
-          #  log = load(open("log.json", "r"))
-          #  log[novo_usuario.email] = datetime()
-          #  dump(log, open("log.json", "w"), sort_keys=True, indent=4)
+
+            # Adiciona ao log
+            log = json.load(open(log_path, "r"))
+            log[novo_usuario.email] = datetime.now().isoformat()
+            json.dump(log, open(log_path, "w"), sort_keys=True, indent=4)
+            
             return redirect(url_for('music.playmusic'))  
 
+        # Caso de erro: usuário ou senha inválidos
         else:
-            flash('Usuário ou senha inválidos!', 'erro')
-
+            flash('Usuário ou senha inválidos!', 'error')
     return render_template('login.html')
 
-# rota da playlist do usuário
+#rota da playlist do usuário
 @music.route('/MinhaPlaylist', methods=['GET', 'POST'])
 def playmusic():
     return render_template('playlistUser.html')
 
-# rota logout
+#rota da playlist do usuário
 @music.route('/logout')
 def logout():
-    session.pop('nome')
+    # Melhoria: remoção segura da sessão
+    session.pop('nome', None)  
     return redirect(url_for('music.index'))
+    # render_template('inicio.html')
